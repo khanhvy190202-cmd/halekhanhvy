@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chinese Garden Adventure</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#e8f5e9;
+    text-align:center;
+    margin:0;
+    padding:20px;
+}
+
+h1{
+    color:#2e7d32;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    margin:15px 0;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+.word{
+    font-size:50px;
+    color:#1b5e20;
+    font-weight:bold;
+}
+
+.meaning{
+    font-size:20px;
+    margin-top:10px;
+}
+
+button{
+    padding:12px 20px;
+    margin:8px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.speak{
+    background:#43a047;
+    color:white;
+}
+
+.record{
+    background:#1976d2;
+    color:white;
+}
+
+.action{
+    background:#ff9800;
+    color:white;
+}
+
+.next{
+    background:#7b1fa2;
+    color:white;
+}
+
+.garden{
+    font-size:40px;
+    line-height:1.5;
+}
+
+.stats{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.stat{
+    background:#f1f8e9;
+    padding:10px;
+    border-radius:10px;
+    min-width:120px;
+}
+
+#message{
+    font-size:20px;
+    margin-top:15px;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🌱 Chinese Garden Adventure 🌱</h1>
+
+<div class="card">
+
+<h2>Từ vựng hiện tại</h2>
+
+<div id="word" class="word">花</div>
+
+<div id="pinyin">huā</div>
+
+<div id="meaning" class="meaning">Hoa</div>
+
+<button class="speak" onclick="speakWord()">
+🔊 Nghe phát âm
+</button>
+
+<button class="record" onclick="startRecognition()">
+🎤 Phát âm
+</button>
+
+<button class="next" onclick="nextWord()">
+➡️ Từ mới
+</button>
+
+<div id="message"></div>
+
+</div>
+
+<div class="card">
+
+<h2>🌾 Khu vườn của bạn</h2>
+
+<div class="garden" id="gardenView">
+🌱🌱🌱🌱🌱
+</div>
+
+<div class="stats">
+
+<div class="stat">
+🌱 Hạt giống
+<h3 id="seed">0</h3>
+</div>
+
+<div class="stat">
+💧 Nước
+<h3 id="water">0</h3>
+</div>
+
+<div class="stat">
+🧪 Phân bón
+<h3 id="fertilizer">0</h3>
+</div>
+
+<div class="stat">
+🌾 Cây
+<h3 id="plants">5</h3>
+</div>
+
+</div>
+
+<button class="action" onclick="plantSeed()">
+🌱 Trồng cây
+</button>
+
+<button class="action" onclick="waterPlant()">
+💧 Tưới nước
+</button>
+
+<button class="action" onclick="fertilizePlant()">
+🧪 Bón phân
+</button>
+
+<h3 id="rank">
+🏆 Danh hiệu: Người mới bắt đầu
+</h3>
+
+</div>
+
+</div>
+
+<script>
+
+const vocabulary = [
+
+{chinese:"花", pinyin:"huā", meaning:"Hoa"},
+{chinese:"树", pinyin:"shù", meaning:"Cây"},
+{chinese:"草", pinyin:"cǎo", meaning:"Cỏ"},
+{chinese:"种子", pinyin:"zhǒngzi", meaning:"Hạt giống"},
+{chinese:"水果", pinyin:"shuǐguǒ", meaning:"Trái cây"},
+{chinese:"苹果", pinyin:"píngguǒ", meaning:"Táo"},
+{chinese:"西瓜", pinyin:"xīguā", meaning:"Dưa hấu"},
+{chinese:"香蕉", pinyin:"xiāngjiāo", meaning:"Chuối"},
+{chinese:"浇水", pinyin:"jiāoshuǐ", meaning:"Tưới nước"},
+{chinese:"施肥", pinyin:"shīféi", meaning:"Bón phân"},
+{chinese:"种植", pinyin:"zhòngzhí", meaning:"Trồng cây"},
+{chinese:"收获", pinyin:"shōuhuò", meaning:"Thu hoạch"},
+{chinese:"花园", pinyin:"huāyuán", meaning:"Khu vườn"},
+{chinese:"农场", pinyin:"nóngchǎng", meaning:"Nông trại"},
+{chinese:"土地", pinyin:"tǔdì", meaning:"Đất"},
+{chinese:"鸟", pinyin:"niǎo", meaning:"Chim"},
+{chinese:"蜜蜂", pinyin:"mìfēng", meaning:"Ong"},
+{chinese:"蝴蝶", pinyin:"húdié", meaning:"Bướm"},
+{chinese:"兔子", pinyin:"tùzi", meaning:"Thỏ"},
+{chinese:"猫", pinyin:"māo", meaning:"Mèo"}
+
+];
+
+let currentIndex = 0;
+
+let garden = {
+seeds:0,
+water:0,
+fertilizer:0,
+plants:5
+};
+
+const rewards = [
+"🌱 Hạt giống",
+"💧 Nước",
+"🧪 Phân bón"
+];
+
+const disasters = [
+"🌪️ Bão lớn",
+"🐛 Sâu bệnh",
+"☀️ Hạn hán",
+"🌧️ Mưa lớn"
+];
+
+function updateWord(){
+
+document.getElementById("word").innerText =
+vocabulary[currentIndex].chinese;
+
+document.getElementById("pinyin").innerText =
+vocabulary[currentIndex].pinyin;
+
+document.getElementById("meaning").innerText =
+vocabulary[currentIndex].meaning;
+}
+
+function nextWord(){
+
+currentIndex =
+Math.floor(Math.random()*vocabulary.length);
+
+updateWord();
+}
+
+function speakWord(){
+
+const word =
+vocabulary[currentIndex].chinese;
+
+const utterance =
+new SpeechSynthesisUtterance(word);
+
+utterance.lang = "zh-CN";
+
+speechSynthesis.speak(utterance);
+}
+
+function startRecognition(){
+
+if(!('webkitSpeechRecognition' in window)){
+alert("Trình duyệt không hỗ trợ nhận diện giọng nói");
+return;
+}
+
+const recognition =
+new webkitSpeechRecognition();
+
+recognition.lang = "zh-CN";
+
+recognition.start();
+
+recognition.onresult = function(event){
+
+const spoken =
+event.results[0][0].transcript.trim();
+
+checkAnswer(spoken);
+}
+}
+
+function checkAnswer(spoken){
+
+const answer =
+vocabulary[currentIndex].chinese;
+
+if(spoken.includes(answer)){
+
+const reward =
+rewards[Math.floor(Math.random()*rewards.length)];
+
+if(reward.includes("Hạt"))
+garden.seeds++;
+
+if(reward.includes("Nước"))
+garden.water++;
+
+if(reward.includes("Phân"))
+garden.fertilizer++;
+
+document.getElementById("message").innerHTML =
+"✅ Chính xác! Bạn nhận được: " + reward;
+
+}else{
+
+const disaster =
+disasters[Math.floor(Math.random()*disasters.length)];
+
+garden.plants =
+Math.max(0,garden.plants-1);
+
+document.getElementById("message").innerHTML =
+"❌ Sai rồi! Thiên tai xảy ra: " + disaster;
+
+}
+
+updateGarden();
+}
+
+function updateGarden(){
+
+document.getElementById("seed").innerText =
+garden.seeds;
+
+document.getElementById("water").innerText =
+garden.water;
+
+document.getElementById("fertilizer").innerText =
+garden.fertilizer;
+
+document.getElementById("plants").innerText =
+garden.plants;
+
+let plantsView = "";
+
+for(let i=0;i<garden.plants;i++){
+plantsView += "🌱";
+}
+
+if(plantsView==="")
+plantsView = "💀";
+
+document.getElementById("gardenView").innerText =
+plantsView;
+
+updateRank();
+}
+
+function plantSeed(){
+
+if(garden.seeds>0){
+
+garden.seeds--;
+garden.plants++;
+
+updateGarden();
+
+alert("🌱 Trồng cây thành công!");
+
+}else{
+
+alert("Không có hạt giống!");
+}
+}
+
+function waterPlant(){
+
+if(garden.water>0){
+
+garden.water--;
+
+updateGarden();
+
+alert("💧 Cây phát triển tốt hơn!");
+}else{
+
+alert("Không có nước!");
+}
+}
+
+function fertilizePlant(){
+
+if(garden.fertilizer>0){
+
+garden.fertilizer--;
+
+garden.plants++;
+
+updateGarden();
+
+alert("🧪 Phân bón giúp cây phát triển!");
+}else{
+
+alert("Không có phân bón!");
+}
+}
+
+function updateRank(){
+
+let rank =
+"Người mới bắt đầu";
+
+if(garden.plants>=10)
+rank = "🌱 Người làm vườn";
+
+if(garden.plants>=25)
+rank = "🚜 Nông dân chăm chỉ";
+
+if(garden.plants>=50)
+rank = "🌾 Chuyên gia làm vườn";
+
+if(garden.plants>=100)
+rank = "👑 Vua khu vườn";
+
+document.getElementById("rank").innerText =
+"🏆 Danh hiệu: " + rank;
+}
+
+updateGarden();
+updateWord();
+
+</script>
+
+</body>
+</html>
